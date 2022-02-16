@@ -449,7 +449,6 @@ class Camera:
         self,
         allocated_memory=None,  # optionally pass numpy array for images
         software_trigger=True,  # False -> external trigger needed
-        re_arm=False,           # True -> camera is re-armed automatically
         ):
         if self.verbose:
             print("%s: recording to memory..."%self.name)
@@ -481,15 +480,11 @@ class Camera:
                 print("%s:  error during record to memory: %s"%(self.name, err))
                 raise
             allocated_memory[i, :, :] = self.buffers[buffer_index] # get image
-            # put the buffer back in the driver queue, but only if needed
             remaining_images = self.num_images - i - 1
-            if remaining_images > len(self.added_buffers):
-                dll.add_buffer(self.handle, 0, 0, buffer_index, w_px, h_px, 16)
-                self.added_buffers.append(buffer_index)
+            # put the buffer back in the driver queue -> ready for multi-record
+            dll.add_buffer(self.handle, 0, 0, buffer_index, w_px, h_px, 16)
+            self.added_buffers.append(buffer_index)
         assert remaining_images == 0, 'acquired images != requested'
-        if re_arm:
-            self._disarm() # tidy up
-            self._arm(self._num_buffers) # re-arm
         if self.verbose:
             print("%s: -> done recording to memory."%self.name)
         return output
@@ -839,6 +834,21 @@ if __name__ == '__main__':
     print("\nMax fps = %0.2f\n"%(frames/time_s)) # ~ 100 -> 9000 typical
     imwrite('test1.tif', images, imagej=True)
 
+    # max fps test -> multiple recordings:
+    iterations = 10
+    frames = 1000
+    camera.apply_settings(frames, 100, 'min', 'max', 'binary+ASCII', 'auto')
+    images = np.zeros(
+        (camera.num_images, camera.height_px, camera.width_px), 'uint16')
+    t0 = time.perf_counter()
+    for i in range(iterations):
+        camera.record_to_memory(
+            allocated_memory=images, software_trigger=False)
+    time_s = time.perf_counter() - t0
+    total_frames = iterations * frames
+    print("\nMax fps = %0.2f\n"%(total_frames/time_s)) # ~ 100 -> 9000 typical
+    imwrite('test2.tif', images, imagej=True)
+
     # random input testing:
     num_acquisitions = 10
     min_h_px, min_w_px = legalize_image_size('min','min')[:2]
@@ -864,7 +874,7 @@ if __name__ == '__main__':
         total_latency_ms += latency_ms
         print("latency (ms) = %0.6f"%latency_ms)
         print("shape of images:", images.shape)
-        if i == 0: imwrite('test2.tif', images, imagej=True)
+        if i == 0: imwrite('test3.tif', images, imagej=True)
         images = images[:,8:,:]
         print("min image values: %s"%images.min(axis=(1, 2)))
         print("max image values: %s"%images.max(axis=(1, 2)))
