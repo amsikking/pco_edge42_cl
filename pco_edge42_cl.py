@@ -30,7 +30,7 @@ class Camera:
                   "directory? (CamLink)")
             raise
         wSZCameraNameLen = 40
-        camera_name = C.c_char_p(wSZCameraNameLen * b'')
+        camera_name = C.c_char_p(wSZCameraNameLen * b' ')
         dll.get_camera_name(self.handle, camera_name, wSZCameraNameLen)
         assert camera_name.value == b'pco.edge rolling shutter 4.2'
         self._num_buffers = 16 # default to maximum
