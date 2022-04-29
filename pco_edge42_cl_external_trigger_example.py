@@ -32,7 +32,7 @@ for i in range(2):
     ao.play_voltages(block=False) # race condition!
     camera.record_to_memory( # -> waits for trigger
         allocated_memory=images, software_trigger=False)
-    imwrite('test_external_trigger.tif', images, imagej=True)
+imwrite('test_external_trigger.tif', images, imagej=True)
 
 time_s = ao.p2s(voltages.shape[0])
 fps = frames /  time_s
