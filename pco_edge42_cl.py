@@ -13,15 +13,16 @@ class Camera:
                  cameras=1,
                  verbose=True,
                  very_verbose=False):
-        assert cameras == 1, 'currently only 1 camera supported'
         self.name = name
+        assert cameras == 1, "%s: currently only 1 camera supported"%self.name
         self.verbose = verbose
         self.very_verbose = very_verbose
         if self.verbose: print("%s: opening..."%self.name)
         try:
             self.handle = C.c_void_p(0)
             dll.open_camera(self.handle, 0)
-            assert self.handle.value is not None
+            assert self.handle.value is not None, (
+                "%s: unexpected handle.value"%self.name)
         except:
             print("%s: failed to open;"%self.name)
             print("%s: - is the camera on and connected?"%self.name)
@@ -32,7 +33,8 @@ class Camera:
         wSZCameraNameLen = 40
         camera_name = C.c_char_p(wSZCameraNameLen * b' ')
         dll.get_camera_name(self.handle, camera_name, wSZCameraNameLen)
-        assert camera_name.value == b'pco.edge rolling shutter 4.2'
+        assert camera_name.value == b'pco.edge rolling shutter 4.2', (
+            "%s: unexpected camera_name.value"%self.name)
         self._num_buffers = 16 # default to maximum
         self._armed = False
         self._disarm()
@@ -131,9 +133,11 @@ class Camera:
         if self.very_verbose:
             print("%s: setting sensor format = %s"%(self.name, mode))
         mode_to_number = {"standard":0, "extended":1}
-        assert mode in mode_to_number, "mode '%s' not allowed"%mode
+        assert mode in mode_to_number, (
+                "%s: unexpected arg for sensor_format"%self.name)
         dll.set_sensor_format(self.handle, mode_to_number[mode])
-        assert self._get_sensor_format() == mode
+        assert self._get_sensor_format() == mode, (
+                "%s: unexpected sensor_format"%self.name)
         if self.very_verbose:
             print("%s: -> done setting sensor format."%self.name)
         return None
@@ -153,9 +157,11 @@ class Camera:
         if self.very_verbose:
             print("%s: setting acquire mode = %s"%(self.name, mode))
         mode_to_number = {"auto":0, "external":1, "external_modulate":2}
-        assert mode in mode_to_number, "mode '%s' not allowed"%mode
+        assert mode in mode_to_number, (
+                "%s: unexpected arg for acquire_mode"%self.name)
         dll.set_acquire_mode(self.handle, mode_to_number[mode])
-        assert self._get_acquire_mode() == mode
+        assert self._get_acquire_mode() == mode, (
+                "%s: unexpected acquire_mode"%self.name)
         if self.very_verbose:
             print("%s: -> done setting acquire mode."%self.name)
         return None
@@ -166,7 +172,7 @@ class Camera:
         dwPixelRate = C.c_uint32(0)
         dll.get_pixel_rate(self.handle, dwPixelRate)
         self.pixel_rate = dwPixelRate.value
-        assert self.pixel_rate != 0
+        assert self.pixel_rate != 0, "%s: unexpected pixel_rate"%self.name
         if self.very_verbose:
             print(" = %i (Hz)"%self.pixel_rate)
         return self.pixel_rate
@@ -174,9 +180,11 @@ class Camera:
     def _set_pixel_rate(self, rate):
         if self.very_verbose:
             print("%s: setting pixel rate = %i (Hz)"%(self.name, rate))
-        assert rate in (95333333, 272250000), "rate '%s' not allowed"%rate
+        assert rate in (95333333, 272250000), (
+                "%s: unexpected arg for pixel_rate"%self.name)
         dll.set_pixel_rate(self.handle, rate)
-        assert self._get_pixel_rate() == rate
+        assert self._get_pixel_rate() == rate, (
+                "%s: unexpected pixel_rate"%self.name)
         if rate == 95333333:  self.line_time_us = 27.77
         if rate == 272250000: self.line_time_us = 9.76
         if self.very_verbose:
@@ -198,9 +206,11 @@ class Camera:
         if self.very_verbose:
             print("%s: setting storage mode = %s"%(self.name, mode))
         mode_to_number = {"recorder":0, "FIFO_buffer":1}
-        assert mode in mode_to_number, "mode '%s' not allowed"%mode
+        assert mode in mode_to_number, (
+                "%s: unexpected arg for storage_mode"%self.name)
         dll.set_storage_mode(self.handle, mode_to_number[mode])
-        assert self._get_storage_mode() == mode
+        assert self._get_storage_mode() == mode, (
+                "%s: unexpected storage_mode"%self.name)
         if self.very_verbose:
             print("%s: -> done setting storage mode."%self.name)
         return None
@@ -220,9 +230,11 @@ class Camera:
         if self.very_verbose:
             print("%s: setting recorder submode = %s"%(self.name, mode))
         mode_to_number = {"sequence":0, "ring_buffer":1}
-        assert mode in mode_to_number, "mode '%s' not allowed"%mode
+        assert mode in mode_to_number, (
+                "%s: unexpected arg for recorder_submode"%self.name)
         dll.set_recorder_submode(self.handle, mode_to_number[mode])
-        assert self._get_recorder_submode() == mode
+        assert self._get_recorder_submode() == mode, (
+                "%s: unexpected recorder_submode"%self.name)
         if self.very_verbose:
             print("%s: -> done setting recorder submode."%self.name)
         return None
@@ -242,9 +254,11 @@ class Camera:
         if self.very_verbose:
             print("%s: setting timestamp mode = %s"%(self.name, mode))
         mode_to_number = {"off":0, "binary":1, "binary+ASCII":2}
-        assert mode in mode_to_number, "mode '%s' not allowed"%mode
+        assert mode in mode_to_number, (
+                "%s: unexpected arg for timestamp_mode"%self.name)
         dll.set_timestamp_mode(self.handle, mode_to_number[mode])
-        assert self._get_timestamp_mode() == mode
+        assert self._get_timestamp_mode() == mode, (
+                "%s: unexpected timestamp_mode"%self.name)
         if self.very_verbose:
             print("%s: -> done setting timestamp mode"%self.name)
         return None
@@ -277,18 +291,22 @@ class Camera:
             print("%s: setting trigger mode = %s"%(self.name, mode))
         mode_to_number = {
             "auto":0, "software":1, "external":2, "external_exposure":3}
-        assert mode in mode_to_number, "mode '%s' not allowed"%mode
+        assert mode in mode_to_number, (
+                "%s: unexpected arg for trigger_mode"%self.name)
         dll.set_trigger_mode(self.handle, mode_to_number[mode])
-        assert self._get_trigger_mode() == mode
+        assert self._get_trigger_mode() == mode, (
+                "%s: unexpected trigger_mode"%self.name)
         if self.very_verbose:
             print("%s: -> done setting trigger mode"%self.name)
         return None
 
     def _force_trigger(self):
-        assert self.trigger_mode in ('software', 'external')
+        assert self.trigger_mode in ('software', 'external'), (
+            "%s: unexpected arg for force_trigger"%self.name)
         wTriggerMode = C.c_uint16(777) # 777 not valid -> should change
         dll.force_trigger(self.handle, wTriggerMode)
-        assert wTriggerMode.value in (0, 1)
+        assert wTriggerMode.value in (0, 1), (
+                "%s: unexpected wTriggerMode.value"%self.name)
         return bool(wTriggerMode.value) # True = new exposure triggered
 
     def _get_exposure_time_us(self): # should we use 'PCO_GetImageTiming'?
@@ -312,12 +330,18 @@ class Camera:
         if self.very_verbose:
             print("%s: setting exposure time (us) = %08i (delay=%08i)"%(
                 self.name, exposure_us, delay_us))
-        assert type(exposure_us) is int and type(delay_us) is int
-        assert 1e2 <= exposure_us <= 1e7, 'exposure %i out of range'%exposure_us
-        assert 0 <= delay_us <= 1e6, 'delay %i out of range'%delay_us
+        assert type(exposure_us) is int, (
+            "%s: unexpected type for exposure_us"%self.name)
+        assert type(delay_us) is int, (
+            "%s: unexpected type for delay_us"%self.name)
+        assert 1e2 <= exposure_us <= 1e7, (
+            "%s: exposure_us out of range"%self.name)
+        assert 0 <= delay_us <= 1e6, (
+            "%s: delay_us out of range"%self.name)
         dll.set_delay_exposure_time(
             self.handle, delay_us, exposure_us, 1, 1) # 1 -> us
-        assert self._get_exposure_time_us() == exposure_us
+        assert self._get_exposure_time_us() == exposure_us, (
+                "%s: unexpected exposure_time_us"%self.name)
         self.delay_us = delay_us
         if self.very_verbose:
             print("%s: -> done setting exposure time."%self.name)
@@ -347,7 +371,7 @@ class Camera:
         dll.set_roi(self.handle,
                     roi_px['left'], roi_px['top'],
                     roi_px['right'], roi_px['bottom'])
-        assert self._get_roi() == roi_px
+        assert self._get_roi() == roi_px, "%s: unexpected roi"%self.name
         if self.very_verbose:
             print("%s: -> done setting roi pixels"%self.name)
         return None
@@ -377,10 +401,12 @@ class Camera:
 
     def _arm(self, num_buffers):
         if self.very_verbose: print("%s: arming..."%self.name)
-        assert not self._armed, 'the camera is already armed...'
-        assert 1 <= num_buffers <= 16
+        assert not self._armed, "%s: camera is already armed"%self.name
+        assert 1 <= num_buffers <= 16, (
+            "%s: num_buffers out of range"%self.name)
         dll.arm_camera(self.handle)
-        assert self._get_image_size() == (self.height_px, self.width_px)
+        assert self._get_image_size() == (self.height_px, self.width_px), (
+            "%s: unexpected image_size"%self.name)
         # allocate buffers for camera to use for images
         h_px, w_px = self.height_px, self.width_px
         self.buffers = []
@@ -396,7 +422,8 @@ class Camera:
                 self.bytes_per_image,
                 c_buffer_pointer,
                 buffer_event)
-            assert buffer_index.value == i
+            assert buffer_index.value == i, (
+                "%s: unexpected buffer_index.value"%self.name)
         dll.set_image_parameters(self.handle, w_px, h_px, 1, C.c_void_p(), 0)
         dll.set_recording_state(self.handle, 1)
         # add allocated buffers to the camera 'driver queue'
@@ -425,7 +452,8 @@ class Camera:
         if self.verbose: print("%s: applying settings..."%self.name)
         if self._armed: self._disarm()
         if num_images is not None:
-            assert type(num_images) is int
+            assert type(num_images) is int, (
+            "%s: unexpected type for num_images"%self.name)
             self.num_images = num_images
         if exposure_us is not None: self._set_exposure_time_us(exposure_us)
         if height_px is not None or width_px is not None:
@@ -440,7 +468,8 @@ class Camera:
         if num_buffers is not None: self._num_buffers = num_buffers
         self._arm(self._num_buffers)
         if timeout_ms is not None:
-            assert type(timeout_ms) is int
+            assert type(timeout_ms) is int, (
+            "%s: unexpected type for timeout_ms"%self.name)
             self.timeout_ms = timeout_ms
         if self.verbose: print("%s: -> done applying settings."%self.name)
         return None
@@ -452,20 +481,25 @@ class Camera:
         ):
         if self.verbose:
             print("%s: recording to memory..."%self.name)
-        assert self._armed, 'camera not armed -> call .apply_settings()'
+        assert self._armed, (
+            '%s: camera not armed -> call .apply_settings()'%self.name)
         h_px, w_px = self.height_px, self.width_px
         if allocated_memory is None: # make numpy array if none given
             allocated_memory = np.zeros((self.num_images, h_px, w_px), 'uint16')
             output = allocated_memory # no memory provided so return some images
         else: # images placed in provided array
-            assert isinstance(allocated_memory, np.ndarray)
-            assert allocated_memory.dtype == np.uint16
-            assert allocated_memory.shape == (self.num_images, h_px, w_px)
+            assert isinstance(allocated_memory, np.ndarray), (
+            "%s: unexpected type for allocated_memory"%self.name)
+            assert allocated_memory.dtype == np.uint16, (
+            "%s: unexpected dtype for allocated_memory"%self.name)
+            assert allocated_memory.shape == (self.num_images, h_px, w_px), (
+            "%s: unexpected shape for allocated_memory"%self.name)
             output = None # avoid returning potentially large array
         buflist = (PCO_Buflist * 1)() # make a PCO list of buffers
         for i in range(self.num_images):
             if software_trigger:
-                assert self._force_trigger(), 'software trigger failed'
+                assert self._force_trigger(), (
+                    "%s: software trigger failed"%self.name)
             buffer_index = self.added_buffers.pop(0) # get next available buffer
             buflist[0].SBufNr = buffer_index # pass index into buffer list
             try:
@@ -473,18 +507,20 @@ class Camera:
             except Exception as e:
                 print("%s: -> buffer timeout?"%self.name)
                 raise
-            assert buflist[0].dwStatusDll == 0xe0008000 # buffer event set
+            assert buflist[0].dwStatusDll == 0xe0008000, ( # buffer event set
+                "%s: buffer event not set"%self.name)
             if buflist[0].dwStatusDrv != 0: # image transfer failed
                 err = buflist[0].dwStatusDrv.value
                 if err == 0x80332028: err = 'DMA error'
-                print("%s:  error during record to memory: %s"%(self.name, err))
+                print("%s: error during record to memory (%s)"%(self.name, err))
                 raise
             allocated_memory[i, :, :] = self.buffers[buffer_index] # get image
             remaining_images = self.num_images - i - 1
             # put the buffer back in the driver queue -> ready for multi-record
             dll.add_buffer(self.handle, 0, 0, buffer_index, w_px, h_px, 16)
             self.added_buffers.append(buffer_index)
-        assert remaining_images == 0, 'acquired images != requested'
+        assert remaining_images == 0, (
+            "%s: acquired images != requested"%self.name)
         if self.verbose:
             print("%s: -> done recording to memory."%self.name)
         return output
@@ -510,9 +546,14 @@ def legalize_image_size(
     if height_px == 'max': height_px = max_height        
     if width_px  == 'min': width_px  = min_width
     if width_px  == 'max': width_px  = max_width
-    assert type(height_px) is int and type(width_px) is int
-    assert min_height <= height_px <= max_height    
-    assert min_width  <= width_px  <= max_width
+    assert type(height_px) is int, (
+        "%s: unexpected type for height_px"%name)
+    assert type(width_px) is int, (
+        "%s: unexpected type for width_px"%name)
+    assert min_height <= height_px <= max_height, (
+        "%s: height_px out of range"%name)
+    assert min_width  <= width_px  <= max_width, (
+        "%s: width_px out of range"%name)
     num_height_steps = (height_px // height_step)
     num_width_steps  = (width_px  // width_step)
     if num_height_steps % 2 != 0: num_height_steps += 1 # must be even for chip
