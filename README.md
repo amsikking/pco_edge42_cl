@@ -1,7 +1,7 @@
 # pco_edge42_cl
 Python device adaptor: PCO.edge 4.2 CamLink sCMOS camera.
 ## Quick start:
-- Install the 'Camlink' interface drivers, then install 'Camware' to test the camera and get the latest
+- Install the 'Camlink' interface drivers (x4 PCIe slot for CamLink card), then install 'Camware' to test the camera and get the latest
 .dll files "SC2_Cam.dll" and "sc2_cl_me4.dll" (versions included here). Put the .dll files in the 
 directory with "pco_edge42_cl.py" and run the script (requires Python and numpy).
 
