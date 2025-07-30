@@ -505,7 +505,7 @@ class Camera:
             try:
                 dll.wait_for_buffer(self.handle, 1, buflist, self.timeout_ms)
             except Exception as e:
-                print("%s: -> buffer timeout?"%self.name)
+                print("%s: -> buffer timeout? (img=%i)"%(self.name, i))
                 raise
             assert buflist[0].dwStatusDll == 0xe0008000, ( # buffer event set
                 "%s: buffer event not set"%self.name)
